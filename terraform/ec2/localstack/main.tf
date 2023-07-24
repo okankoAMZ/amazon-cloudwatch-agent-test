@@ -80,7 +80,7 @@ resource "aws_instance" "integration-test" {
 
 data "aws_ami" "latest" {
   most_recent = true
-
+  owners = ["self", "506463145083"]
   filter {
     name   = "name"
     values = ["cloudwatch-agent-integration-test-ubuntu*"]
