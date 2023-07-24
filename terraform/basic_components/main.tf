@@ -17,12 +17,10 @@ data "aws_vpc" "vpc" {
   default = true
 }
 
-if !var.running_local{
-  data "aws_subnets" "public_subnet_ids" {
-    filter {
-      name   = "vpc-id"
-      values = [data.aws_vpc.vpc.id]
-    }
+data "aws_subnets" "public_subnet_ids" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.vpc.id]
   }
 }
 
