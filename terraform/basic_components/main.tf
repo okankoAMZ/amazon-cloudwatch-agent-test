@@ -17,7 +17,9 @@ data "aws_vpc" "vpc" {
   default = true
 }
 
-data "aws_subnets" "public_subnet_ids" {
+# data "aws_subnets" "public_subnet_ids" {
+
+data "aws_subnets" "private_subnet_ids" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.vpc.id]
