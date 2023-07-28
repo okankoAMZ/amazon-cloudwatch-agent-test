@@ -98,34 +98,6 @@ func (g *OtlpTracesGenerator) GetGeneratorConfig() *common.TraceConfig {
 	return g.cfg
 }
 
-//func (g *OtlpTracesGenerator) validateSegments(t *testing.T, segments []types.Segment, cfg *common.TraceConfig) {
-//	t.Helper()
-//	for _, segment := range segments {
-//		var result map[string]interface{}
-//		require.NoError(t, json.Unmarshal([]byte(*segment.Document), &result))
-//		if _, ok := result["parent_id"]; ok {
-//			// skip subsegments
-//			continue
-//		}
-//		annotations, ok := result["annotations"]
-//		assert.True(t, ok, "missing annotations")
-//		assert.True(t, reflect.DeepEqual(annotations, cfg.Annotations), "mismatching annotations")
-//		metadataByNamespace, ok := result["metadata"].(map[string]interface{})
-//		assert.True(t, ok, "missing metadata")
-//		for namespace, wantMetadata := range cfg.Metadata {
-//			var gotMetadata map[string]interface{}
-//			gotMetadata, ok = metadataByNamespace[namespace].(map[string]interface{})
-//			assert.Truef(t, ok, "missing metadata in namespace: %s", namespace)
-//			for key, wantValue := range wantMetadata {
-//				var gotValue interface{}
-//				gotValue, ok = gotMetadata[key]
-//				assert.Truef(t, ok, "missing expected metadata key: %s", key)
-//				assert.Truef(t, reflect.DeepEqual(gotValue, wantValue), "mismatching values for key (%s):\ngot\n\t%v\nwant\n\t%v", key, gotValue, wantValue)
-//			}
-//		}
-//	}
-//}
-
 func setupClient(ctx context.Context) (*sdktrace.TracerProvider, func(context.Context) error, error) {
 	res := resource.NewWithAttributes(
 		semconv.SchemaURL,

@@ -2,17 +2,11 @@ package xray
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"reflect"
-	"testing"
 	"time"
 
 	"github.com/aws/amazon-cloudwatch-agent-test/util/common"
-	"github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/aws/aws-xray-sdk-go/xray"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var generatorError = errors.New("Generator error")
@@ -98,35 +92,6 @@ func (g *XrayTracesGenerator) GetAgentRuntime() time.Duration {
 func (g *XrayTracesGenerator) GetName() string {
 	return g.name
 }
-func (g * XrayTracesGenerator) GetGeneratorConfig() * common.TraceConfig{
+func (g *XrayTracesGenerator) GetGeneratorConfig() *common.TraceConfig {
 	return g.cfg
-}
-
-
-func (g *XrayTracesGenerator) validateSegments(t *testing.T, segments []types.Segment, cfg *common.TraceConfig) {
-	t.Helper()
-	for _, segment := range segments {
-		var result map[string]interface{}
-		require.NoError(t, json.Unmarshal([]byte(*segment.Document), &result))
-		if _, ok := result["parent_id"]; ok {
-			// skip subsegments
-			continue
-		}
-		annotations, ok := result["annotations"]
-		assert.True(t, ok, "missing annotations")
-		assert.True(t, reflect.DeepEqual(annotations, cfg.Annotations), "mismatching annotations")
-		metadataByNamespace, ok := result["metadata"].(map[string]interface{})
-		assert.True(t, ok, "missing metadata")
-		for namespace, wantMetadata := range cfg.Metadata {
-			var gotMetadata map[string]interface{}
-			gotMetadata, ok = metadataByNamespace[namespace].(map[string]interface{})
-			assert.Truef(t, ok, "missing metadata in namespace: %s", namespace)
-			for key, wantValue := range wantMetadata {
-				var gotValue interface{}
-				gotValue, ok = gotMetadata[key]
-				assert.Truef(t, ok, "missing expected metadata key: %s", key)
-				assert.Truef(t, reflect.DeepEqual(gotValue, wantValue), "mismatching values for key (%s):\ngot\n\t%v\nwant\n\t%v", key, gotValue, wantValue)
-			}
-		}
-	}
 }

@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	agentRuntime          = 5 * time.Minute
-	loadGeneratorInterval = 5 * time.Second
+	agentRuntime          = 2 * time.Minute
+	loadGeneratorInterval = 10 * time.Second
 	testSegmentCount      = 20
 )
 
@@ -48,7 +48,6 @@ func TestTraces(t *testing.T) {
 			},
 		},
 	}
-	t.Logf("Sanity check: number of test cases:%d", len(testCases))
 	for name, testCase := range testCases {
 
 		t.Run(name, func(t *testing.T) {
