@@ -14,8 +14,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-
-
 type TraceConfig struct {
 	Interval    time.Duration
 	Annotations map[string]interface{}
@@ -70,7 +68,6 @@ func TraceTest(t *testing.T, traceTest TracesTestInterface) error {
 }
 
 func SegmentValidationTest(t *testing.T, traceTest TracesTestInterface, segments []types.Segment) error {
-	// t.Helper()
 	cfg := traceTest.GetGeneratorConfig()
 	for _, segment := range segments {
 		var result map[string]interface{}
