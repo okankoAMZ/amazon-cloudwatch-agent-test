@@ -2,6 +2,8 @@ package common
 
 import (
 	"context"
+	"encoding/json"
+	"reflect"
 	"testing"
 	"time"
 
@@ -12,7 +14,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-const testSegmentCount = 20
+
 
 type TraceConfig struct {
 	Interval    time.Duration
@@ -62,7 +64,38 @@ func TraceTest(t *testing.T, traceTest TracesTestInterface) error {
 
 	assert.True(t, len(segments) >= testsGenerated,
 		"FAILED: Not enough segments, expected %d but got %d",
-		testSegmentCount, len(segments))
-	// traceTest.validateSegments(t, segments, traceTest.GetGeneratorConfig())
+		testsGenerated, len(segments))
+	require.NoError(t, SegmentValidationTest(t, traceTest, segments), "Segment Validation Failed")
 	return nil
+}
+
+func SegmentValidationTest(t *testing.T, traceTest TracesTestInterface, segments []types.Segment) error {
+	// t.Helper()
+	cfg := traceTest.GetGeneratorConfig()
+	for _, segment := range segments {
+		var result map[string]interface{}
+		require.NoError(t, json.Unmarshal([]byte(*segment.Document), &result))
+		if _, ok := result["parent_id"]; ok {
+			// skip subsegments
+			continue
+		}
+		annotations, ok := result["annotations"]
+		assert.True(t, ok, "missing annotations")
+		assert.True(t, reflect.DeepEqual(annotations, cfg.Annotations), "mismatching annotations")
+		metadataByNamespace, ok := result["metadata"].(map[string]interface{})
+		assert.True(t, ok, "missing metadata")
+		for namespace, wantMetadata := range cfg.Metadata {
+			var gotMetadata map[string]interface{}
+			gotMetadata, ok = metadataByNamespace[namespace].(map[string]interface{})
+			assert.Truef(t, ok, "missing metadata in namespace: %s", namespace)
+			for key, wantValue := range wantMetadata {
+				var gotValue interface{}
+				gotValue, ok = gotMetadata[key]
+				assert.Truef(t, ok, "missing expected metadata key: %s", key)
+				assert.Truef(t, reflect.DeepEqual(gotValue, wantValue), "mismatching values for key (%s):\ngot\n\t%v\nwant\n\t%v", key, gotValue, wantValue)
+			}
+		}
+	}
+	return nil
+
 }
