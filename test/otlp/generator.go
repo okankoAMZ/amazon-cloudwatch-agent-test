@@ -25,14 +25,8 @@ const (
 )
 
 type OtlpTracesGenerator struct {
-	common.TracesTestInterface
-	cfg                     *common.TraceConfig
-	testCasesGeneratedCount int
-	testCasesEndedCount     int
-	agentConfigPath         string
-	agentRuntime            time.Duration
-	name                    string
-	done                    chan struct{}
+	common.TraceGenerator
+	common.TraceGeneratorInterface
 }
 
 func (g *OtlpTracesGenerator) StartSendingTraces(ctx context.Context) error {
@@ -41,10 +35,10 @@ func (g *OtlpTracesGenerator) StartSendingTraces(ctx context.Context) error {
 		return err
 	}
 	defer shutdown(ctx)
-	ticker := time.NewTicker(g.cfg.Interval)
+	ticker := time.NewTicker(g.Cfg.Interval)
 	for {
 		select {
-		case <-g.done:
+		case <-g.Done:
 			ticker.Stop()
 			return client.ForceFlush(ctx)
 		case <-ticker.C:
@@ -55,47 +49,49 @@ func (g *OtlpTracesGenerator) StartSendingTraces(ctx context.Context) error {
 	}
 }
 func (g *OtlpTracesGenerator) StopSendingTraces() {
-	close(g.done)
+	close(g.Done)
 }
-func newLoadGenerator(cfg *common.TraceConfig) *OtlpTracesGenerator {
+func newLoadGenerator(cfg *common.TraceGeneratorConfig) *OtlpTracesGenerator {
 	return &OtlpTracesGenerator{
-		cfg:                     cfg,
-		done:                    make(chan struct{}),
-		testCasesGeneratedCount: 0,
-		testCasesEndedCount:     0,
+		TraceGenerator: common.TraceGenerator{
+			Cfg:                     cfg,
+			Done:                    make(chan struct{}),
+			SegmentsGenerationCount: 0,
+			SegmentsEndedCount:      0,
+		},
 	}
 }
 func (g *OtlpTracesGenerator) Generate(ctx context.Context) error {
 	tracer := otel.Tracer("tracer")
-	g.testCasesGeneratedCount++
+	g.SegmentsGenerationCount++
 	_, span := tracer.Start(ctx, "example-span", trace.WithSpanKind(trace.SpanKindServer))
 	defer func() {
 		span.End()
-		g.testCasesEndedCount++
+		g.SegmentsEndedCount++
 	}()
 
-	if len(g.cfg.Annotations) > 0 {
-		span.SetAttributes(attribute.StringSlice(attributeKeyAwsXrayAnnotations, maps.Keys(g.cfg.Annotations)))
+	if len(g.Cfg.Annotations) > 0 {
+		span.SetAttributes(attribute.StringSlice(attributeKeyAwsXrayAnnotations, maps.Keys(g.Cfg.Annotations)))
 	}
-	span.SetAttributes(g.cfg.Attributes...)
+	span.SetAttributes(g.Cfg.Attributes...)
 	return nil
 }
 
-func (g *OtlpTracesGenerator) GetTestCount() (int, int) {
-	return g.testCasesGeneratedCount, g.testCasesEndedCount
+func (g *OtlpTracesGenerator) GetSegmentCount() (int, int) {
+	return g.SegmentsGenerationCount, g.SegmentsEndedCount
 }
 
 func (g *OtlpTracesGenerator) GetAgentConfigPath() string {
-	return g.agentConfigPath
+	return g.AgentConfigPath
 }
 func (g *OtlpTracesGenerator) GetAgentRuntime() time.Duration {
-	return g.agentRuntime
+	return g.AgentRuntime
 }
 func (g *OtlpTracesGenerator) GetName() string {
-	return g.name
+	return g.Name
 }
-func (g *OtlpTracesGenerator) GetGeneratorConfig() *common.TraceConfig {
-	return g.cfg
+func (g *OtlpTracesGenerator) GetGeneratorConfig() *common.TraceGeneratorConfig {
+	return g.Cfg
 }
 
 func setupClient(ctx context.Context) (*sdktrace.TracerProvider, func(context.Context) error, error) {
