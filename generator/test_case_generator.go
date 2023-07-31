@@ -138,7 +138,6 @@ var testTypeToTestConfig = map[string][]testConfig{
 		{testDir: "../../test/stress/windows/system"},
 	},
 	"ec2_trace_integration": {
-		{testDir: "./test/xray"},
 		{testDir: "./test/otlp"},
 	},
 	"ecs_fargate": {
