@@ -24,11 +24,11 @@ func TestTraces(t *testing.T) {
 	env := environment.GetEnvironmentMetaData()
 	testCases := map[string]struct {
 		agentConfigPath string
-		generatorConfig *common.TraceConfig
+		generatorConfig *common.TraceGeneratorConfig
 	}{
 		"WithXray/Simple": {
 			agentConfigPath: filepath.Join("resources", "xray-config.json"),
-			generatorConfig: &common.TraceConfig{
+			generatorConfig: &common.TraceGeneratorConfig{
 				Interval: loadGeneratorInterval,
 				Annotations: map[string]interface{}{
 					"test_type":   "simple_xray",
@@ -53,10 +53,10 @@ func TestTraces(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 
 			XrayTest := newLoadGenerator(testCase.generatorConfig)
-			XrayTest.agentConfigPath = testCase.agentConfigPath
-			XrayTest.name = name
-			XrayTest.agentRuntime = agentRuntime
-			t.Logf("config interval %v", XrayTest.cfg.Interval)
+			XrayTest.AgentConfigPath = testCase.agentConfigPath
+			XrayTest.Name = name
+			XrayTest.AgentRuntime = agentRuntime
+			t.Logf("config interval %v", XrayTest.Cfg.Interval)
 			err := common.TraceTest(t, XrayTest)
 			require.NoError(t, err, "TraceTest failed because %s", err)
 

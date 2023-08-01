@@ -12,21 +12,15 @@ import (
 var generatorError = errors.New("Generator error")
 
 type XrayTracesGenerator struct {
-	common.TracesTestInterface
-	cfg                     *common.TraceConfig
-	testCasesGeneratedCount int
-	testCasesEndedCount     int
-	agentConfigPath         string
-	agentRuntime            time.Duration
-	name                    string
-	done                    chan struct{}
+	common.TraceGenerator
+	common.TraceGeneratorInterface
 }
 
 func (g *XrayTracesGenerator) StartSendingTraces(ctx context.Context) error {
-	ticker := time.NewTicker(g.cfg.Interval)
+	ticker := time.NewTicker(g.Cfg.Interval)
 	for {
 		select {
-		case <-g.done:
+		case <-g.Done:
 			ticker.Stop()
 			return nil
 		case <-ticker.C:
@@ -37,31 +31,33 @@ func (g *XrayTracesGenerator) StartSendingTraces(ctx context.Context) error {
 	}
 }
 func (g *XrayTracesGenerator) StopSendingTraces() {
-	close(g.done)
+	close(g.Done)
 }
-func newLoadGenerator(cfg *common.TraceConfig) *XrayTracesGenerator {
+func newLoadGenerator(cfg *common.TraceGeneratorConfig) *XrayTracesGenerator {
 	return &XrayTracesGenerator{
-		cfg:                     cfg,
-		done:                    make(chan struct{}),
-		testCasesGeneratedCount: 0,
-		testCasesEndedCount:     0,
+		TraceGenerator: common.TraceGenerator{
+			Cfg:                     cfg,
+			Done:                    make(chan struct{}),
+			SegmentsGenerationCount: 0,
+			SegmentsEndedCount:      0,
+		},
 	}
 }
 func (g *XrayTracesGenerator) Generate(ctx context.Context) error {
 	rootCtx, root := xray.BeginSegment(ctx, "load-generator")
-	g.testCasesGeneratedCount++
+	g.SegmentsGenerationCount++
 	defer func() {
 		root.Close(nil)
-		g.testCasesEndedCount++
+		g.SegmentsEndedCount++
 	}()
 
-	for key, value := range g.cfg.Annotations {
+	for key, value := range g.Cfg.Annotations {
 		if err := root.AddAnnotation(key, value); err != nil {
 			return err
 		}
 	}
 
-	for namespace, metadata := range g.cfg.Metadata {
+	for namespace, metadata := range g.Cfg.Metadata {
 		for key, value := range metadata {
 			if err := root.AddMetadataToNamespace(namespace, key, value); err != nil {
 				return err
@@ -79,19 +75,19 @@ func (g *XrayTracesGenerator) Generate(ctx context.Context) error {
 	return nil
 }
 
-func (g *XrayTracesGenerator) GetTestCount() (int, int) {
-	return g.testCasesGeneratedCount, g.testCasesEndedCount
+func (g *XrayTracesGenerator) GetSegmentCount() (int, int) {
+	return g.SegmentsGenerationCount, g.SegmentsEndedCount
 }
 
 func (g *XrayTracesGenerator) GetAgentConfigPath() string {
-	return g.agentConfigPath
+	return g.AgentConfigPath
 }
 func (g *XrayTracesGenerator) GetAgentRuntime() time.Duration {
-	return g.agentRuntime
+	return g.AgentRuntime
 }
 func (g *XrayTracesGenerator) GetName() string {
-	return g.name
+	return g.Name
 }
-func (g *XrayTracesGenerator) GetGeneratorConfig() *common.TraceConfig {
-	return g.cfg
+func (g *XrayTracesGenerator) GetGeneratorConfig() *common.TraceGeneratorConfig {
+	return g.Cfg
 }

@@ -14,41 +14,45 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-type TraceConfig struct {
+type TraceGeneratorConfig struct {
 	Interval    time.Duration
 	Annotations map[string]interface{}
 	Metadata    map[string]map[string]interface{}
 	Attributes  []attribute.KeyValue
 }
-type TracesTestInterface interface {
+type TraceGenerator struct{
+	Cfg                     *TraceGeneratorConfig
+	SegmentsGenerationCount int
+	SegmentsEndedCount      int
+	AgentConfigPath         string
+	AgentRuntime            time.Duration
+	Name                    string
+	Done                    chan struct{}
+}
+type TraceGeneratorInterface interface {
 	StartSendingTraces(ctx context.Context) error
 	StopSendingTraces()
 	Generate(ctx context.Context) error
-	validateSegments(t *testing.T, segments []types.Segment, config *TraceConfig)
-	GetTestCount() (int, int)
+	GetSegmentCount() (int, int)
 	GetAgentConfigPath() string
-	GetGeneratorConfig() *TraceConfig
+	GetGeneratorConfig() *TraceGeneratorConfig
 	GetContext() context.Context
 	GetAgentRuntime() time.Duration
 	GetName() string
 }
 
-func TraceTest(t *testing.T, traceTest TracesTestInterface) error {
+func TraceTest(t *testing.T, traceTest TraceGeneratorInterface) error {
+	t.Helper()
 	startTime := time.Now()
-	t.Logf("AgentConfigpath %s", traceTest.GetAgentConfigPath())
 	CopyFile(traceTest.GetAgentConfigPath(), ConfigOutputPath)
-	require.NoError(t, StartAgent(ConfigOutputPath, true, false), "Couldn't copy file")
-	t.Logf("Successfully copied file.")
-	t.Log("Starting to send traces")
+	require.NoError(t, StartAgent(ConfigOutputPath, true, false), "Couldn't Start the agent")
 	go func() {
 		require.NoError(t, traceTest.StartSendingTraces(context.Background()), "load generator exited with error")
 	}()
 	time.Sleep(traceTest.GetAgentRuntime())
 	traceTest.StopSendingTraces()
-	t.Logf("Stopped Traces")
 	StopAgent()
-	t.Logf("Stopped Agent")
-	testsGenerated, testsEnded := traceTest.GetTestCount()
+	testsGenerated, testsEnded := traceTest.GetSegmentCount()
 	t.Logf("For %s , Test Cases Generated %d | Test Cases Ended: %d", traceTest.GetName(), testsGenerated, testsEnded)
 	endTime := time.Now()
 	t.Logf("Agent has been running for %s", endTime.Sub(startTime))
@@ -67,7 +71,8 @@ func TraceTest(t *testing.T, traceTest TracesTestInterface) error {
 	return nil
 }
 
-func SegmentValidationTest(t *testing.T, traceTest TracesTestInterface, segments []types.Segment) error {
+func SegmentValidationTest(t *testing.T, traceTest TraceGeneratorInterface, segments []types.Segment) error {
+	t.Helper()
 	cfg := traceTest.GetGeneratorConfig()
 	for _, segment := range segments {
 		var result map[string]interface{}
