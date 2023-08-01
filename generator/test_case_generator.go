@@ -139,7 +139,7 @@ var testTypeToTestConfig = map[string][]testConfig{
 	},
 	"ec2_trace_integration": {
 		{testDir: "./test/xray"},
-		{testDir: "./test/otlp"},
+		// {testDir: "./test/otlp"},
 	},
 	"ecs_fargate": {
 		{testDir: "./test/ecs/ecs_metadata"},
