@@ -65,12 +65,12 @@ func (g *XrayTracesGenerator) Generate(ctx context.Context) error {
 		}
 	}
 
-	_, subSeg := xray.BeginSubsegment(rootCtx, "with-error")
-	defer subSeg.Close(nil)
+	// _, subSeg := xray.BeginSubsegment(rootCtx, "with-error")
+	// defer subSeg.Close(nil)
 
-	if err := subSeg.AddError(generatorError); err != nil {
-		return err
-	}
+	// if err := subSeg.AddError(generatorError); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
