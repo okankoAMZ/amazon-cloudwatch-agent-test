@@ -12,7 +12,7 @@ import (
 
 const (
 	agentRuntime          = 2 * time.Minute
-	loadGeneratorInterval = 10 * time.Second
+	loadGeneratorInterval = 30 * time.Second
 	testSegmentCount      = 20
 )
 
