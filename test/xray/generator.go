@@ -10,7 +10,7 @@ import (
 )
 
 var generatorError = errors.New("Generator error")
-
+const GENERATOR_CLOSING_DELAY =  2 * time.Second // this const determines delay between stopping segment generation and stopping xray.
 type XrayTracesGenerator struct {
 	common.TraceGenerator
 	common.TraceGeneratorInterface
@@ -47,6 +47,7 @@ func (g *XrayTracesGenerator) Generate(ctx context.Context) error {
 	rootCtx, root := xray.BeginSegment(ctx, "load-generator")
 	g.SegmentsGenerationCount++
 	defer func() {
+		time.Sleep(GENERATOR_CLOSING_DELAY)
 		root.Close(nil)
 		g.SegmentsEndedCount++
 	}()
@@ -65,12 +66,12 @@ func (g *XrayTracesGenerator) Generate(ctx context.Context) error {
 		}
 	}
 
-	// _, subSeg := xray.BeginSubsegment(rootCtx, "with-error")
-	// defer subSeg.Close(nil)
+	_, subSeg := xray.BeginSubsegment(rootCtx, "with-error")
+	defer subSeg.Close(nil)
 
-	// if err := subSeg.AddError(generatorError); err != nil {
-	// 	return err
-	// }
+	if err := subSeg.AddError(generatorError); err != nil {
+		return err
+	}
 
 	return nil
 }

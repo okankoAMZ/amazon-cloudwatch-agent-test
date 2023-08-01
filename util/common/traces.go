@@ -13,7 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
 )
-
+const (
+	AGENT_SHUTDOWN_DELAY = 2 * time.Second // this const is the delay between stoping trace generation and stopping agent
+	
+)
 type TraceGeneratorConfig struct {
 	Interval    time.Duration
 	Annotations map[string]interface{}
@@ -51,6 +54,7 @@ func TraceTest(t *testing.T, traceTest TraceGeneratorInterface) error {
 	}()
 	time.Sleep(traceTest.GetAgentRuntime())
 	traceTest.StopSendingTraces()
+	time.Sleep(AGENT_SHUTDOWN_DELAY)
 	StopAgent()
 	testsGenerated, testsEnded := traceTest.GetSegmentCount()
 	t.Logf("For %s , Test Cases Generated %d | Test Cases Ended: %d", traceTest.GetName(), testsGenerated, testsEnded)

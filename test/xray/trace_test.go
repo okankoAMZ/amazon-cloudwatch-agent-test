@@ -12,8 +12,7 @@ import (
 
 const (
 	agentRuntime          = 2 * time.Minute
-	loadGeneratorInterval = 30 * time.Second
-	testSegmentCount      = 20
+	loadGeneratorInterval = 10 * time.Second
 )
 
 func init() {
