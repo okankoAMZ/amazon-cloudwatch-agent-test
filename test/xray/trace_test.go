@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	agentRuntime          = 2 * time.Minute
-	loadGeneratorInterval = 10 * time.Second
+	agentRuntime          = 5 * time.Minute
+	loadGeneratorInterval = 5* time.Second
 )
 
 func init() {

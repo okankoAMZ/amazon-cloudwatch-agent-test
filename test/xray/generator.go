@@ -10,7 +10,7 @@ import (
 )
 
 var generatorError = errors.New("Generator error")
-const GENERATOR_CLOSING_DELAY =  2 * time.Second // this const determines delay between stopping segment generation and stopping xray.
+const GENERATOR_CLOSING_DELAY =  10 * time.Second // this const determines delay between stopping segment generation and stopping xray.
 type XrayTracesGenerator struct {
 	common.TraceGenerator
 	common.TraceGeneratorInterface

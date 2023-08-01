@@ -13,17 +13,19 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
 )
+
 const (
-	AGENT_SHUTDOWN_DELAY = 2 * time.Second // this const is the delay between stoping trace generation and stopping agent
-	
+	AGENT_SHUTDOWN_DELAY = 60 * time.Second // this const is the delay between stoping trace generation and stopping agent
+
 )
+
 type TraceGeneratorConfig struct {
 	Interval    time.Duration
 	Annotations map[string]interface{}
 	Metadata    map[string]map[string]interface{}
 	Attributes  []attribute.KeyValue
 }
-type TraceGenerator struct{
+type TraceGenerator struct {
 	Cfg                     *TraceGeneratorConfig
 	SegmentsGenerationCount int
 	SegmentsEndedCount      int
@@ -60,7 +62,7 @@ func TraceTest(t *testing.T, traceTest TraceGeneratorInterface) error {
 	t.Logf("For %s , Test Cases Generated %d | Test Cases Ended: %d", traceTest.GetName(), testsGenerated, testsEnded)
 	endTime := time.Now()
 	t.Logf("Agent has been running for %s", endTime.Sub(startTime))
-	time.Sleep(5 * time.Second)
+	time.Sleep(20 * time.Second)
 
 	traceIDs, err := awsservice.GetTraceIDs(startTime, endTime, awsservice.FilterExpression(
 		traceTest.GetGeneratorConfig().Annotations))
@@ -69,8 +71,8 @@ func TraceTest(t *testing.T, traceTest TraceGeneratorInterface) error {
 	require.NoError(t, err, "unable to get segments")
 
 	assert.True(t, len(segments) >= testsGenerated,
-		"FAILED: Not enough segments, expected %d but got %d",
-		testsGenerated, len(segments))
+		"FAILED: Not enough segments, expected %d but got %d , traceIDCount: %d",
+		testsGenerated, len(segments),len(traceIDs))
 	require.NoError(t, SegmentValidationTest(t, traceTest, segments), "Segment Validation Failed")
 	return nil
 }
