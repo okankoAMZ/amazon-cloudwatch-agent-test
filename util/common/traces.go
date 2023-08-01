@@ -62,7 +62,9 @@ func TraceTest(t *testing.T, traceTest TraceGeneratorInterface) error {
 	t.Logf("For %s , Test Cases Generated %d | Test Cases Ended: %d", traceTest.GetName(), testsGenerated, testsEnded)
 	endTime := time.Now()
 	t.Logf("Agent has been running for %s", endTime.Sub(startTime))
-	time.Sleep(20 * time.Second)
+	paddingDelay := time.Duration(testsGenerated*int(traceTest.GetGeneratorConfig().Interval) - int(traceTest.GetAgentRuntime()))
+	t.Logf("There is need for %d second padding delay", paddingDelay)
+	time.Sleep(paddingDelay * time.Second)
 
 	traceIDs, err := awsservice.GetTraceIDs(startTime, endTime, awsservice.FilterExpression(
 		traceTest.GetGeneratorConfig().Annotations))
@@ -72,7 +74,7 @@ func TraceTest(t *testing.T, traceTest TraceGeneratorInterface) error {
 
 	assert.True(t, len(segments) >= testsGenerated,
 		"FAILED: Not enough segments, expected %d but got %d , traceIDCount: %d",
-		testsGenerated, len(segments),len(traceIDs))
+		testsGenerated, len(segments), len(traceIDs))
 	require.NoError(t, SegmentValidationTest(t, traceTest, segments), "Segment Validation Failed")
 	return nil
 }
