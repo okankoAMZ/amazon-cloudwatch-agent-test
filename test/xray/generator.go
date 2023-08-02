@@ -3,14 +3,18 @@ package xray
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/amazon-cloudwatch-agent-test/util/common"
 	"github.com/aws/aws-xray-sdk-go/xray"
+	"github.com/google/uuid"
 )
 
 var generatorError = errors.New("Generator error")
+
 type XrayTracesGenerator struct {
+	segmentID string
 	common.TraceGenerator
 	common.TraceGeneratorInterface
 }
@@ -34,6 +38,7 @@ func (g *XrayTracesGenerator) StopSendingTraces() {
 }
 func newLoadGenerator(cfg *common.TraceGeneratorConfig) *XrayTracesGenerator {
 	return &XrayTracesGenerator{
+		segmentID: uuid.New().String(),
 		TraceGenerator: common.TraceGenerator{
 			Cfg:                     cfg,
 			Done:                    make(chan struct{}),
@@ -43,7 +48,8 @@ func newLoadGenerator(cfg *common.TraceGeneratorConfig) *XrayTracesGenerator {
 	}
 }
 func (g *XrayTracesGenerator) Generate(ctx context.Context) error {
-	rootCtx, root := xray.BeginSegment(ctx, "load-generator")
+	rootCtx, root := xray.BeginSegment(ctx, fmt.Sprintf(
+		"load-generator-%s", g.segmentID))
 	g.SegmentsGenerationCount++
 	defer func() {
 		root.Close(nil)
