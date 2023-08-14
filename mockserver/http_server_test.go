@@ -96,7 +96,7 @@ func HttpServerCheckTPM(t *testing.T) {
 //		wg.Wait()
 //	}
 func TestMockServer(t *testing.T) {
-	serverControlChan := startHttpServer()
+	serverControlChan := StartHttpServer()
 	time.Sleep(3 * time.Second)
 	HttpServerSanityCheck(t, APP_SERVER)
 	HttpsServerSanityCheck(t, DATA_SERVER)
@@ -107,5 +107,5 @@ func TestMockServer(t *testing.T) {
 }
 
 func TestStartMockServer(t *testing.T) {
-	startHttpServer()
+	StartHttpServer()
 }

@@ -52,11 +52,11 @@ func healthCheck(w http.ResponseWriter, _ *http.Request) {
 
 func (ts *transactionStore) checkData(w http.ResponseWriter, _ *http.Request) {
 	var message string
-	var t =atomic.LoadUint32(&ts.transactions)
-	if  t > 0 {
+	var t = atomic.LoadUint32(&ts.transactions)
+	if t > 0 {
 		message = SuccessMessage
 	}
-	fmt.Printf("\033[31m Time: %d | checkData msg: %s | %d\033[0m \n", time.Now().Unix(), message,t)
+	fmt.Printf("\033[31m Time: %d | checkData msg: %s | %d\033[0m \n", time.Now().Unix(), message, t)
 	if _, err := io.WriteString(w, message); err != nil {
 		io.WriteString(w, err.Error())
 		log.Printf("Unable to write response: %v", err)
@@ -88,7 +88,7 @@ func (ts *transactionStore) tpm(w http.ResponseWriter, _ *http.Request) {
 
 // Starts an HTTPS server that receives requests for the data handler service at the sample server port
 // Starts an HTTP server that receives request from validator only to verify the data ingestion
-func startHttpServer() chan interface{} {
+func StartHttpServer() chan interface{} {
 	serverControlChan := make(chan interface{})
 	log.Println("\033[31m Starting Server \033[0m")
 	store := transactionStore{startTime: time.Now()}
@@ -102,7 +102,7 @@ func startHttpServer() chan interface{} {
 		dataApp.PathPrefix("/put-data").HandlerFunc(ts.dataReceived)
 		dataApp.HandleFunc("/trace/v1", ts.dataReceived)
 		dataApp.HandleFunc("/metric/v1", ts.dataReceived)
-		if err := daemonServer.ListenAndServeTLS(CertFilePath, KeyFilePath	); err != nil {
+		if err := daemonServer.ListenAndServeTLS(CertFilePath, KeyFilePath); err != nil {
 			log.Fatalf("HTTPS server error: %v", err)
 			err = daemonServer.Shutdown(context.TODO())
 			log.Fatalf("Shutdown server error: %v", err)
