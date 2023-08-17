@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mockserver
+package main
 
 import (
 	"context"
@@ -133,4 +133,15 @@ func StartHttpServer() chan interface{} {
 	}()
 
 	return serverControlChan
+}
+
+
+func main(){
+	server:=StartHttpServer()
+	select {
+	case <- server:
+			fmt.Println("server is dead")
+			
+
+	}
 }
